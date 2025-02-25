@@ -23,9 +23,14 @@ export function TaskForm({ onSubmit, defaultValues }: TaskFormProps) {
     },
   });
 
+  const handleSubmit = form.handleSubmit((data) => {
+    onSubmit(data);
+    form.reset();
+  });
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <FormField
           control={form.control}
           name="title"
@@ -33,7 +38,7 @@ export function TaskForm({ onSubmit, defaultValues }: TaskFormProps) {
             <FormItem>
               <FormLabel>Title</FormLabel>
               <FormControl>
-                <Input placeholder="Enter task title" {...field} value={field.value || ""} />
+                <Input placeholder="Enter task title" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -47,7 +52,7 @@ export function TaskForm({ onSubmit, defaultValues }: TaskFormProps) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input placeholder="Enter description" {...field} value={field.value || ""} />
+                <Input placeholder="Enter description" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -63,12 +68,11 @@ export function TaskForm({ onSubmit, defaultValues }: TaskFormProps) {
               <FormControl>
                 <Input 
                   type="datetime-local" 
-                  {...field}
-                  value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ""}
                   onChange={(e) => {
                     const date = e.target.value ? new Date(e.target.value) : null;
                     field.onChange(date);
                   }}
+                  value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ""}
                 />
               </FormControl>
               <FormMessage />
@@ -84,7 +88,7 @@ export function TaskForm({ onSubmit, defaultValues }: TaskFormProps) {
               <FormLabel>Priority</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
-                value={field.value || "medium"}
+                defaultValue={field.value}
               >
                 <FormControl>
                   <SelectTrigger>

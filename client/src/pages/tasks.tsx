@@ -5,16 +5,16 @@ import { apiRequest } from "@/lib/queryClient";
 import type { Task, InsertTask } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { format, isToday, isTomorrow, isThisWeek, isAfter } from "date-fns";
+import { format, isToday, isTomorrow, isThisWeek, compareAsc } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, Calendar } from "lucide-react";
+import { Calendar, Flag, Trash2 } from "lucide-react";
 
 function groupTasksByDueDate(tasks: Task[]) {
   const groups: { [key: string]: Task[] } = {
     today: [],
     tomorrow: [],
     thisWeek: [],
-    later: [],
+    future: [],
     noDueDate: []
   };
 
@@ -29,14 +29,25 @@ function groupTasksByDueDate(tasks: Task[]) {
         groups.tomorrow.push(task);
       } else if (isThisWeek(dueDate)) {
         groups.thisWeek.push(task);
-      } else if (isAfter(dueDate, new Date())) {
-        groups.later.push(task);
+      } else {
+        groups.future.push(task);
       }
     }
   });
 
+  // Sort future tasks by date
+  groups.future.sort((a, b) => {
+    return compareAsc(new Date(a.dueDate!), new Date(b.dueDate!));
+  });
+
   return groups;
 }
+
+const priorityColors = {
+  low: "text-emerald-500",
+  medium: "text-amber-500",
+  high: "text-rose-500"
+};
 
 export default function TasksPage() {
   const { toast } = useToast();
@@ -84,16 +95,21 @@ export default function TasksPage() {
     return <div className="flex items-center justify-center h-full">Loading...</div>;
   }
 
-  return (
-    <div className="space-y-6 max-w-md mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <TaskForm onSubmit={(data) => createTask.mutate(data)} />
-      </motion.div>
+  const pageTransition = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+    transition: { duration: 0.3 }
+  };
 
-      <AnimatePresence>
+  return (
+    <motion.div 
+      className="max-w-3xl mx-auto px-4"
+      {...pageTransition}
+    >
+      <TaskForm onSubmit={(data) => createTask.mutate(data)} />
+
+      <AnimatePresence mode="wait">
         {Object.entries(taskGroups).map(([group, groupTasks]) => (
           groupTasks.length > 0 && (
             <motion.div
@@ -101,27 +117,31 @@ export default function TasksPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white rounded-xl shadow-sm overflow-hidden"
+              transition={{ duration: 0.2 }}
+              className="mt-6 bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100"
             >
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+              <div className="px-4 py-3 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-100">
                 <h2 className="text-sm font-medium text-gray-600 uppercase">
-                  {group.replace(/([A-Z])/g, ' $1').trim()}
+                  {group === 'future' ? 'Upcoming' : group.replace(/([A-Z])/g, ' $1').trim()}
                 </h2>
               </div>
 
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-50">
                 {groupTasks.map((task) => (
                   <motion.div
                     key={task.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="px-4 py-3 flex items-center justify-between group hover:bg-gray-50 transition-colors"
+                    className="px-4 py-3 flex items-center justify-between group hover:bg-gray-50 transition-all duration-200"
                   >
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{task.title}</h3>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-gray-900 truncate">{task.title}</h3>
+                        <Flag className={`w-3 h-3 ${priorityColors[task.priority as keyof typeof priorityColors]}`} />
+                      </div>
                       {task.description && (
-                        <p className="text-sm text-gray-500 mt-1">{task.description}</p>
+                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{task.description}</p>
                       )}
                       {task.dueDate && (
                         <div className="flex items-center text-xs text-gray-400 mt-1">
@@ -134,10 +154,10 @@ export default function TasksPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                       onClick={() => deleteTask.mutate(task.id)}
                     >
-                      <Trash2 className="w-4 h-4 text-red-500" />
+                      <Trash2 className="w-4 h-4 text-rose-500" />
                     </Button>
                   </motion.div>
                 ))}
@@ -146,6 +166,6 @@ export default function TasksPage() {
           )
         ))}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

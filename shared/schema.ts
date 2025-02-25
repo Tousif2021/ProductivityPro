@@ -34,7 +34,7 @@ export const reminders = pgTable("reminders", {
 
 // Create a modified schema for task insertion that properly handles dates
 export const insertTaskSchema = createInsertSchema(tasks, {
-  dueDate: z.date().nullable(),
+  dueDate: z.string().nullable().transform((val) => val ? new Date(val) : null),
 }).omit({ id: true });
 
 export const insertMediaFileSchema = createInsertSchema(mediaFiles).omit({ id: true });

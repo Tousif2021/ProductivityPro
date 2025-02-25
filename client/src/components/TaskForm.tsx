@@ -58,17 +58,16 @@ export function TaskForm({ onSubmit, defaultValues }: TaskFormProps) {
         <FormField
           control={form.control}
           name="dueDate"
-          render={({ field: { onChange, value } }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Due Date</FormLabel>
               <FormControl>
                 <Input 
                   type="datetime-local"
                   onChange={(e) => {
-                    const date = e.target.value ? new Date(e.target.value) : null;
-                    onChange(date);
+                    field.onChange(e.target.value || null);
                   }}
-                  value={value instanceof Date ? value.toISOString().slice(0, 16) : ""}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />
@@ -83,8 +82,8 @@ export function TaskForm({ onSubmit, defaultValues }: TaskFormProps) {
             <FormItem>
               <FormLabel>Priority</FormLabel>
               <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
+                onValueChange={field.onChange}
+                value={field.value}
               >
                 <FormControl>
                   <SelectTrigger>

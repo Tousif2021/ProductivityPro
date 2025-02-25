@@ -33,8 +33,7 @@ export const reminders = pgTable("reminders", {
 });
 
 // Create a modified schema for task insertion that properly handles dates
-const baseTaskSchema = createInsertSchema(tasks);
-export const insertTaskSchema = baseTaskSchema.extend({
+export const insertTaskSchema = createInsertSchema(tasks, {
   dueDate: z.date().nullable(),
 }).omit({ id: true });
 

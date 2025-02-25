@@ -19,18 +19,14 @@ export function TaskForm({ onSubmit, defaultValues }: TaskFormProps) {
       description: "",
       priority: "medium",
       dueDate: null,
+      completed: false,
       ...defaultValues,
     },
   });
 
-  const handleSubmit = form.handleSubmit((data) => {
-    onSubmit(data);
-    form.reset();
-  });
-
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="title"
@@ -62,17 +58,17 @@ export function TaskForm({ onSubmit, defaultValues }: TaskFormProps) {
         <FormField
           control={form.control}
           name="dueDate"
-          render={({ field }) => (
+          render={({ field: { onChange, value } }) => (
             <FormItem>
               <FormLabel>Due Date</FormLabel>
               <FormControl>
                 <Input 
-                  type="datetime-local" 
+                  type="datetime-local"
                   onChange={(e) => {
                     const date = e.target.value ? new Date(e.target.value) : null;
-                    field.onChange(date);
+                    onChange(date);
                   }}
-                  value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ""}
+                  value={value instanceof Date ? value.toISOString().slice(0, 16) : ""}
                 />
               </FormControl>
               <FormMessage />

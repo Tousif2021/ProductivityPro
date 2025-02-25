@@ -3,20 +3,34 @@ import { TaskForm } from "@/components/TaskForm";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
-import type { Task } from "@shared/schema";
+import type { Task, InsertTask } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TasksPage() {
+  const { toast } = useToast();
   const { data: tasks, isLoading } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],
   });
 
   const createTask = useMutation({
-    mutationFn: async (task: Task) => {
-      await apiRequest("POST", "/api/tasks", task);
+    mutationFn: async (data: InsertTask) => {
+      const response = await apiRequest("POST", "/api/tasks", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      toast({
+        title: "Success",
+        description: "Task created successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -26,6 +40,10 @@ export default function TasksPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      toast({
+        title: "Success",
+        description: "Task deleted successfully",
+      });
     },
   });
 
@@ -34,9 +52,9 @@ export default function TasksPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Tasks</h1>
-      
-      <TaskForm onSubmit={(data) => createTask.mutate(data as Task)} />
-      
+
+      <TaskForm onSubmit={(data) => createTask.mutate(data)} />
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {tasks?.map((task) => (
           <Card key={task.id} className="p-4">

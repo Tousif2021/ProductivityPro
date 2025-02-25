@@ -1,43 +1,60 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Sidebar } from "@/components/ui/sidebar";
-import { FiCalendar, FiFolder, FiBell } from "react-icons/fi";
+import { motion } from "framer-motion";
+import { 
+  CalendarDays, 
+  FolderOpen, 
+  Bell,
+} from "lucide-react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
 
   const links = [
-    { href: "/", icon: FiCalendar, label: "Tasks" },
-    { href: "/media", icon: FiFolder, label: "Media" },
-    { href: "/reminders", icon: FiBell, label: "Reminders" },
+    { href: "/", icon: CalendarDays, label: "Tasks" },
+    { href: "/media", icon: FolderOpen, label: "Media" },
+    { href: "/reminders", icon: Bell, label: "Reminders" },
   ];
 
   return (
-    <div className="flex h-screen">
-      <Sidebar>
-        <div className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-lg font-semibold">Productivity Suite</h2>
-          <nav className="space-y-1">
-            {links.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link key={link.href} href={link.href}>
-                  <a
+    <div className="flex flex-col h-screen bg-gray-50">
+      {/* Main Content with animation */}
+      <motion.main 
+        className="flex-1 overflow-y-auto p-4 pb-20"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {children}
+      </motion.main>
+
+      {/* Bottom Navigation Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
+        <div className="flex justify-around items-center max-w-md mx-auto">
+          {links.map((link) => {
+            const Icon = link.icon;
+            const isActive = location === link.href;
+            return (
+              <Link key={link.href} href={link.href}>
+                <a className="flex flex-col items-center py-2">
+                  <Icon 
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900",
-                      location === link.href ? "bg-gray-100 text-gray-900" : ""
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
+                      "w-6 h-6 transition-colors duration-200",
+                      isActive ? "text-blue-500" : "text-gray-400"
+                    )} 
+                  />
+                  <span className={cn(
+                    "text-xs mt-1 transition-colors duration-200",
+                    isActive ? "text-blue-500" : "text-gray-500"
+                  )}>
                     {link.label}
-                  </a>
-                </Link>
-              );
-            })}
-          </nav>
+                  </span>
+                </a>
+              </Link>
+            );
+          })}
         </div>
-      </Sidebar>
-      <main className="flex-1 overflow-y-auto bg-gray-50 p-6">{children}</main>
+      </nav>
     </div>
   );
 }

@@ -32,7 +32,12 @@ export const reminders = pgTable("reminders", {
   notified: boolean("notified").default(false),
 });
 
-export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true });
+// Create a modified schema for task insertion that properly handles dates
+const baseTaskSchema = createInsertSchema(tasks);
+export const insertTaskSchema = baseTaskSchema.extend({
+  dueDate: z.date().nullable(),
+}).omit({ id: true });
+
 export const insertMediaFileSchema = createInsertSchema(mediaFiles).omit({ id: true });
 export const insertFolderSchema = createInsertSchema(folders).omit({ id: true });
 export const insertReminderSchema = createInsertSchema(reminders).omit({ id: true });
